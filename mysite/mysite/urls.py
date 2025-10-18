@@ -18,7 +18,7 @@ from django.contrib import admin
 from django.urls import include, path
 
 urlpatterns = [
-    path('', include("myapp.urls")),
-    path("myapp/", include("myapp.urls")),
-    path("admin/", admin.site.urls),
+    path('', include("myapp.urls")),         # Raíz del sitio → usa las rutas de myapp
+    path("myapp/", include("myapp.urls")),   # /myapp/ → también usa las rutas de myapp
+    path("admin/", admin.site.urls),         # /admin/ → panel de administración
 ]
