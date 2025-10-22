@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}HomeBalance{% endblock %}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9fafc;
+            margin: 0;
+            padding: 0;
+        }
+        header {
+            background-color: #87CEEB;
+            color: white;
+            padding: 15px 0;
+            text-align: center;
+        }
+        nav a {
+            color: white;
+            margin: 0 15px;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        nav a:hover {
+            text-decoration: underline;
+        }
+        main {
+            padding: 40px;
+            text-align: center;
+        }
+        footer {
+            background-color: #eaeaea;
+            color: #555;
+            text-align: center;
+            padding: 10px 0;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+        }
+        .user-info {
+            margin-top: 10px;
+            font-size: 0.9em;
+        }
+        .user-info a {
+            color: white;
+            font-weight: normal;
+            text-decoration: underline;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>HomeBalance</h1>
+        <nav>
+            <a href="{% url 'inicio' %}">Inicio</a>
+            <a href="{% url 'perfil' %}">Perfil</a>
+            <a href="{% url 'tareas' %}">Tareas</a>
+        </nav>
+
+        <!-- 🔐 Control de sesión -->
+        <div class="user-info">
+            {% if user.is_authenticated %}
+                👋 Hola, <strong>{{ user.username }}</strong> |
+                <a href="{% url 'logout' %}">Cerrar sesión</a>
+            {% else %}
+                <a href="{% url 'login' %}">Iniciar sesión</a> |
+                <a href="{% url 'registro' %}">Registrarse</a>
+            {% endif %}
+        </div>
+    </header>
+
+    <main>
+        {% block content %}
+        <!-- Aquí irá el contenido de cada página -->
+        {% endblock %}
+    </main>
+
+    <footer>
+        <p>© 2025 HomeBalance — Proyecto inicial UTFSM</p>
+    </footer>
+</body>
+</html>
