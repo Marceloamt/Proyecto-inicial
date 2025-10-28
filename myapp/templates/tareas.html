@@ -1,22 +1,35 @@
 {% extends "base.html" %}
-
 {% block title %}Tareas | HomeBalance{% endblock %}
 
 {% block content %}
+<div class="container">
     <h2>🧹 Lista de Tareas del Hogar</h2>
-    <p>Aquí podrás ver y asignar las tareas según disponibilidad.</p>
+
+    {% if mensaje %}
+        <div class="mensaje">{{ mensaje }}</div>
+    {% endif %}
 
     <!-- Formulario para agregar una nueva tarea -->
     <form method="POST">
-        {% csrf_token %}
-        <input type="text" name="nombre" placeholder="Nombre de la tarea" required>
-        <input type="text" name="responsable" placeholder="Responsable" required>
-        <button type="submit">➕ Agregar tarea</button>
-    </form>
+    {% csrf_token %}
+    <input type="text" name="nombre" placeholder="Nombre de la tarea" required>
+
+    <select name="responsable" required>
+        <option value="">Selecciona responsable</option>
+        {% for miembro in familia.miembros.all %}
+            <option value="{{ miembro.id }}">{{ miembro.username }}</option>
+        {% endfor %}
+        <option value="{{ familia.jefe.id }}">{{ familia.jefe.username }} (Jefe)</option>
+    </select>
+
+    <button type="submit">➕ Agregar tarea</button>
+</form>
+
+
 
     <hr>
 
-    <!-- Lista de tareas reales desde la base de datos -->
+    <!-- Lista de tareas desde la base de datos -->
     <ul>
         {% for tarea in tareas %}
             <section>
@@ -26,28 +39,23 @@
                     </span>
                     (<em>{{ tarea.estado }}</em>)
                     <form action="{% url 'completar_tarea' tarea.id %}" method="POST" style="display:inline;">
-                    {% csrf_token %}
-                    <button type="submit">↩️ Marcar como pendiente</button>
-                </form>
-            {% else %}
-                🕓 <span style="color: red;">
-                    {{ tarea.nombre }} — {{ tarea.responsable }}
-                </span>
-                (<em>{{ tarea.estado }}</em>)
-                <form action="{% url 'completar_tarea' tarea.id %}" method="POST" style="display:inline;">
-                    {% csrf_token %}
-                    <button type="submit">
-                        {% if tarea.estado == "pendiente" %}
-                            ✅ Marcar como hecha
-                        {% else %}
-                            ↩️ Marcar como pendiente
-                        {% endif %}
-                    </button>
-                </form>
-            {% endif %}
+                        {% csrf_token %}
+                        <button type="submit">↩️ Marcar como pendiente</button>
+                    </form>
+                {% else %}
+                    🕓 <span style="color: red;">
+                        {{ tarea.nombre }} — {{ tarea.responsable }}
+                    </span>
+                    (<em>{{ tarea.estado }}</em>)
+                    <form action="{% url 'completar_tarea' tarea.id %}" method="POST" style="display:inline;">
+                        {% csrf_token %}
+                        <button type="submit">✅ Marcar como hecha</button>
+                    </form>
+                {% endif %}
             </section>
-    {% empty %}
-        <li>No hay tareas registradas aún 💤</li>
-    {% endfor %}
-</ul>
+        {% empty %}
+            <li>No hay tareas registradas aún 💤</li>
+        {% endfor %}
+    </ul>
+</div>
 {% endblock %}

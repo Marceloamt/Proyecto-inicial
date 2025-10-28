@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Crear familia | HomeBalance{% endblock %}
+
+{% block content %}
+<div class="crear-familia-container">
+  <h2>🏡 Crear nueva familia</h2>
+  <p class="descripcion">Completa el nombre de tu familia para comenzar a organizar tus tareas en grupo.</p>
+
+  <form method="post" class="form-familia">
+  {% csrf_token %}
+  <input 
+    type="text" 
+    name="nombre" 
+    placeholder="Ingresa el nombre de tu familia" 
+    required
+  >
+  <button type="submit" class="btn btn-crear">💚 Crear familia</button>
+</form>
+
+  <a href="{% url 'inicio' %}" class="volver">⬅ Volver al inicio</a>
+</div>
+
+<style>
+  .crear-familia-container {
+    max-width: 500px;
+    margin: 60px auto;
+    padding: 30px;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    text-align: center;
+  }
+
+  h2 {
+    color: #333;
+    margin-bottom: 10px;
+  }
+
+  .descripcion {
+    color: #666;
+    margin-bottom: 25px;
+  }
+
+  .form-familia {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .form-familia input[type="text"],
+  .form-familia select {
+    width: 80%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 1rem;
+  }
+
+  .btn {
+    display: inline-block;
+    padding: 12px 20px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: bold;
+    color: white;
+    margin-top: 10px;
+    transition: background-color 0.3s, transform 0.2s;
+  }
+
+  .btn-crear {
+    background-color: #4CAF50;
+  }
+
+  .btn-crear:hover {
+    background-color: #43a047;
+    transform: translateY(-2px);
+  }
+
+  .volver {
+    display: inline-block;
+    margin-top: 15px;
+    color: #555;
+    text-decoration: none;
+  }
+
+  .volver:hover {
+    text-decoration: underline;
+  }
+</style>
+{% endblock %}

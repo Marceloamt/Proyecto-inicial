@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+  <h2>📅 Mi Horario Semanal</h2>
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th>Día</th>
+        <th>Inicio</th>
+        <th>Fin</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for h in horarios %}
+      <tr>
+        <td>{{ h.get_dia_display }}</td>
+        <td>{{ h.hora_inicio }}</td>
+        <td>{{ h.hora_fin }}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="3">Aún no registras tu horario.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <a href="{% url 'registrar_horario' %}" class="btn btn-success">Agregar nuevo</a>
+</div>
+{% endblock %}

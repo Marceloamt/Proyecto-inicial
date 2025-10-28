@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Invitar o unirse a una familia</h2>
+
+<form method="POST">
+  {% csrf_token %}
+  <div>
+    <h3>Invitar usuario (solo jefe de hogar)</h3>
+    <label>Nombre de usuario:</label>
+    <input type="text" name="nombre_usuario" placeholder="Ej: juan23">
+    <button type="submit">Invitar</button>
+  </div>
+
+  <hr>
+
+  <div>
+    <h3>Unirse con código</h3>
+    <label>Código de invitación:</label>
+    <input type="text" name="codigo" placeholder="Ej: XJ29LM">
+    <button type="submit">Unirse</button>
+  </div>
+</form>
+{% endblock %}

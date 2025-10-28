@@ -1,9 +1,102 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}Inicio | HomeBalance{% endblock %}
 
 {% block content %}
-    <h2>🏠 Bienvenida/o a HomeBalance</h2>
-    <p>Organiza las tareas del hogar de forma justa y eficiente.</p>
-{% endblock %}
+<div class="inicio-container">
+  <h2>🏠 Bienvenida/o a <span class="logo">HomeBalance</span></h2>
+  <p>Organiza las tareas del hogar de forma justa y eficiente.</p>
 
+  {% if user.is_authenticated %}
+    <p class="saludo">Hola, {{ user.username }} 👋</p>
+
+    <!-- Mostrar botones de acción -->
+    <div class="botones">
+      <a href="{% url 'perfil' %}" class="btn btn-secundario">👤 Ver mi perfil</a>
+      <a href="{% url 'crear_familia' %}" class="btn btn-crear">🏡 Crear familia</a>
+    </div>
+
+  {% else %}
+    <div class="botones">
+      <a href="{% url 'login' %}" class="btn btn-principal">🔑 Iniciar sesión</a>
+      <a href="{% url 'registro' %}" class="btn btn-secundario">📝 Registrarme</a>
+    </div>
+  {% endif %}
+</div>
+
+<style>
+  /* ---- Contenedor principal ---- */
+  .inicio-container {
+    text-align: center;
+    margin-top: 60px;
+    padding: 20px;
+  }
+
+  .inicio-container h2 {
+    color: #333;
+    font-size: 2rem;
+    margin-bottom: 10px;
+  }
+
+  .logo {
+    color: #4CAF50;
+    font-weight: bold;
+  }
+
+  .inicio-container p {
+    font-size: 1.1rem;
+    color: #555;
+    margin-bottom: 20px;
+  }
+
+  .saludo {
+    font-weight: bold;
+    margin-bottom: 15px;
+  }
+
+  /* ---- Botones ---- */
+  .botones {
+    margin-top: 15px;
+  }
+
+  .btn {
+    display: inline-block;
+    padding: 12px 20px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: bold;
+    color: white;
+    margin: 8px;
+    transition: background-color 0.3s, transform 0.2s;
+  }
+
+  .btn:hover {
+    transform: translateY(-2px);
+  }
+
+  .btn-principal {
+    background-color: #007BFF;
+  }
+
+  .btn-principal:hover {
+    background-color: #0069d9;
+  }
+
+  .btn-secundario {
+    background-color: #6C757D;
+  }
+
+  .btn-secundario:hover {
+    background-color: #5a6268;
+  }
+
+  .btn-crear {
+    background-color: #4CAF50;
+  }
+
+  .btn-crear:hover {
+    background-color: #43a047;
+  }
+</style>
+{% endblock %}

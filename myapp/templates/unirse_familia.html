@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Unirse a una familia | HomeBalance{% endblock %}
+
+{% block content %}
+<div class="unirse-container">
+  <h2>🔑 Unirse a una familia</h2>
+  <p>Ingresa el código de invitación que te compartió el jefe de familia.</p>
+
+  <form method="post">
+    {% csrf_token %}
+    <input type="text" name="codigo" placeholder="Código de invitación" required maxlength="8">
+    <button type="submit" class="btn">Unirse</button>
+  </form>
+
+  <a href="{% url 'perfil' %}" class="volver">⬅ Volver a mi perfil</a>
+</div>
+
+<style>
+  .unirse-container {
+    max-width: 450px;
+    margin: 60px auto;
+    padding: 30px;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    text-align: center;
+  }
+  h2 {
+    color: #333;
+    margin-bottom: 15px;
+  }
+  input[type="text"] {
+    width: 80%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 1rem;
+    text-align: center;
+  }
+  .btn {
+    background-color: #2196F3;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: bold;
+    border: none;
+    cursor: pointer;
+  }
+  .btn:hover {
+    background-color: #1976D2;
+  }
+  .volver {
+    display: block;
+    margin-top: 15px;
+    color: #555;
+    text-decoration: none;
+  }
+  .volver:hover {
+    text-decoration: underline;
+  }
+</style>
+{% endblock %}

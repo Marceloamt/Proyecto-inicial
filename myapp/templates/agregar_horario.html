@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+  <h2>🕒 Registrar Horario</h2>
+  <form method="POST">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn btn-primary">Guardar</button>
+  </form>
+  <a href="{% url 'ver_horario' %}" class="btn btn-secondary mt-3">Ver mis horarios</a>
+</div>
+{% endblock %}

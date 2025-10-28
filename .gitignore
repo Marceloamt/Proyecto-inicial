@@ -1,0 +1,25 @@
+# Entorno virtual
+venv/
+.env
+
+# Archivos compilados de Python
+__pycache__/
+*.py[cod]
+
+# Base de datos local
+db.sqlite3
+
+# Archivos temporales
+*.log
+*.pot
+*.pyc
+*.pyo
+
+# Archivos de VS Code
+.vscode/
+
+# Archivos de sistema macOS
+.DS_Store
+
+# Archivos de migraciones compiladas
+*/migrations/__pycache__/
