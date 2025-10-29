@@ -1,27 +1,50 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="container">
-  <h2>📅 Mi Horario Semanal</h2>
-  <table class="table table-striped">
-    <thead>
-      <tr>
-        <th>Día</th>
-        <th>Inicio</th>
-        <th>Fin</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for h in horarios %}
-      <tr>
-        <td>{{ h.get_dia_display }}</td>
-        <td>{{ h.hora_inicio }}</td>
-        <td>{{ h.hora_fin }}</td>
-      </tr>
-      {% empty %}
-      <tr><td colspan="3">Aún no registras tu horario.</td></tr>
-      {% endfor %}
-    </tbody>
-  </table>
-  <a href="{% url 'registrar_horario' %}" class="btn btn-success">Agregar nuevo</a>
+<div class="container" style="padding: 40px; max-width: 800px; margin: 0 auto;">
+    <h2>📅 Mis Horarios Disponibles</h2>
+   
+    <!-- Mensajes de Django (para mostrar éxito o eliminación) -->
+    {% if messages %}
+        {% for message in messages %}
+            <div style="padding: 10px; margin-bottom: 20px; border-radius: 5px; background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb;">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+
+    <table class="table table-striped" style="width: 100%; border-collapse: collapse; margin-top: 15px;">
+        <thead>
+            <tr style="background-color: #87CEEB; color: white;">
+                <th style="padding: 10px; border: 1px solid #ddd;">Día</th>
+                <th style="padding: 10px; border: 1px solid #ddd;">Inicio</th>
+                <th style="padding: 10px; border: 1px solid #ddd;">Término</th> <!-- ✅ CORRECCIÓN -->
+                <th style="padding: 10px; border: 1px solid #ddd;">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for h in horarios %}
+            <tr style="border: 1px solid #ddd;">
+                <td style="padding: 10px;">{{ h.get_dia_display }}</td>
+                <td style="padding: 10px;">{{ h.hora_inicio|time:"H:i" }}</td> <!-- Formato de tiempo -->
+                <td style="padding: 10px;">{{ h.hora_termino|time:"H:i" }}</td> <!-- ✅ CAMPO CORREGIDO -->
+                <td style="padding: 10px;">
+                    <!-- Botón Eliminar -->
+                    <form action="{% url 'eliminar_horario' h.id %}" method="post" style="display:inline;">
+                        {% csrf_token %}
+                        <button type="submit" style="background-color: #e74c3c; color: white; border: none; padding: 4px 8px; border-radius: 6px; cursor: pointer;">🗑️ Eliminar</button>
+                    </form>
+                    <!-- Botón Editar -->
+                    <a href="{% url 'editar_horario' h.id %}" style="background-color: white; border: 1px solid #2196F3; color: #2196F3; padding: 4px 8px; border-radius: 6px; text-decoration: none; font-size: 0.9em; margin-left: 5px;">✏️ Editar</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="4" style="padding: 10px; text-align: center;">Aún no registras horarios disponibles.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+   
+    <a href="{% url 'agregar_horario' %}" style="background-color: #4CAF50; color: white; padding: 10px 15px; border-radius: 5px; text-decoration: none; margin-top: 20px; display: inline-block;">➕ Agregar nuevo horario</a>
+    <a href="{% url 'perfil' %}" style="display: inline-block; margin-left: 15px; color: #007bff; text-decoration: none;">← Volver al Perfil</a>
 </div>
 {% endblock %}

@@ -23,6 +23,7 @@ urlpatterns = [
     path('reset/<uidb64>/<token>/', auth_views.PasswordResetConfirmView.as_view(), name='password_reset_confirm'),
     path('reset/done/', auth_views.PasswordResetCompleteView.as_view(), name='password_reset_complete'),
     path('horario/agregar/', views.agregar_horario, name='agregar_horario'),
-    path('horario/eliminar/<int:horario_id>/', views.eliminar_horario, name='eliminar_horario'),
     path('horario/ver/', views.ver_horario, name='ver_horario'),
+    path('horario/editar/<int:horario_id>/', views.editar_horario, name='editar_horario'),
+    path('horario/eliminar/<int:horario_id>/', views.eliminar_horario, name='eliminar_horario'),
 ]

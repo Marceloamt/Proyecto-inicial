@@ -2,120 +2,195 @@
 {% block title %}Perfil | HomeBalance{% endblock %}
 
 {% block content %}
-<h2>👤 Perfil de {{ usuario.username }}</h2>
+<main style="padding: 40px; max-width: 1200px; margin: 0 auto;">
 
-{% if familia %}
-  <div class="familia-card">
-    <h3>🏡 Familia: <span>{{ familia.nombre }}</span></h3>
-
-    {% if es_jefe %}
-      <p><strong>Rol:</strong> Jefe/a de hogar</p>
-      <p>
-        <strong>Código de invitación:</strong> 
-        <span id="codigo">{{ familia.codigo_invitacion }}</span>
-        <button onclick="copiarCodigo()">📋 Copiar código</button>
-      </p>
-      <a href="{% url 'invitar_miembro' %}" class="btn">➕ Invitar miembros</a>
-    {% else %}
-      <p><strong>Rol:</strong> Miembro del hogar</p>
-      <p><strong>Jefe/a de familia:</strong> {{ familia.jefe.username }}</p>
-      <p><strong>Otros miembros:</strong>
-        {% if miembros %}
-            {{ miembros|join:", " }}
-        {% else %}
-            (no hay otros miembros)
-        {% endif %}
-      </p>
+    {% if messages %}
+        <div class="mensajes">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+        </div>
     {% endif %}
 
-    <!-- 🔹 Botón para agregar horario disponible -->
-    <div class="horario-boton">
-      <a href="{% url 'agregar_horario' %}" class="btn btn-success">
-        🕒 Agregar horario disponible
-      </a>
+    <h2>👤 Perfil de {{ usuario.username|default:"Usuario" }}</h2>
+
+    <div class="perfil-edicion-card familia-card" style="margin-bottom: 20px;">
+        <h3>🎂 Datos Personales</h3>
+        
+        <p><strong>Edad (calculada):</strong> 
+            {{ perfil.edad|default:"Sin registro" }} años
+        </p>
+
+        <form method="post" class="form-perfil">
+            {% csrf_token %}
+            
+            {{ form.as_p }} 
+
+            <button type="submit" class="btn btn-crear">💾 Guardar Fecha de Nacimiento</button>
+        </form>
     </div>
+    <hr>
+    {% if familia %}
+        <div class="familia-card">
+            <h3>🏡 Familia: <span>{{ familia.nombre }}</span></h3>
 
-  </div>
+            {% if es_jefe %}
+                <p><strong>Rol:</strong> Jefe/a de hogar</p>
+                <p>
+                    <strong>Código de invitación:</strong>
+                    <span id="codigo">{{ familia.codigo_invitacion }}</span>
+                    <button onclick="copiarCodigo()" class="btn">📋 Copiar código</button>
+                </p>
+                <a href="{% url 'invitar_miembro' %}" class="btn">➕ Invitar miembros</a>
+            {% else %}
+                <p><strong>Rol:</strong> Miembro del hogar</p>
+                <p><strong>Jefe/a de familia:</strong> {{ familia.jefe.username }}</p>
+                <p><strong>Otros miembros:</strong>
+                    {% if miembros %}
+                        {{ miembros|join:", " }}
+                    {% else %}
+                        (no hay otros miembros)
+                    {% endif %}
+                </p>
+            {% endif %}
 
-{% else %}
-  <p>No perteneces a ninguna familia.</p>
+            <div class="horario-boton">
+                <a href="{% url 'agregar_horario' %}" class="btn btn-success">🕒 Agregar horario disponible</a>
+                <a href="{% url 'ver_horario' %}" class="btn">🗓️ Ver mis horarios</a>
+            </div>
+        </div>
+    {% else %}
+        <p>No perteneces a ninguna familia.</p>
+        <div class="botones-familia">
+            <a href="{% url 'crear_familia' %}" class="btn btn-crear">🏡 Crear mi familia</a>
+            <a href="{% url 'unirse_familia' %}" class="btn btn-unirse">🔑 Unirse con código</a>
+        </div>
+    {% endif %}
 
-  <div class="botones-familia">
-    <a href="{% url 'crear_familia' %}" class="btn btn-crear">🏡 Crear mi familia</a>
-    <a href="{% url 'unirse_familia' %}" class="btn btn-unirse">🔑 Unirse con código</a>
-  </div>
-{% endif %}
+    <hr>
 
-<hr>
-<h3>🕒 Mis horarios disponibles</h3>
+    <h3>📅 Calendario de Tareas y Disponibilidad</h3>
+    <div id='calendar' style="margin-top: 20px;"></div>
 
-{% if horarios_disponibles %}
-  <div class="horario-card">
-    <table class="tabla-horarios">
-      <thead>
-        <tr>
-          <th>Día</th>
-          <th>Inicio</th>
-          <th>Término</th>
-          <th>Acciones</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for h in horarios_disponibles %}
-        <tr>
-          <td>{{ h.get_dia_display }}</td>
-          <td>{{ h.hora_inicio }}</td>
-          <td>{{ h.hora_termino }}</td>
-          <td>
-            <form action="{% url 'eliminar_horario' h.id %}" method="post" style="display:inline;">
-              {% csrf_token %}
-              <button type="submit" class="btn btn-danger btn-sm">🗑️ Eliminar</button>
-            </form>
-            <a href="{% url 'editar_horario' h.id %}" class="btn btn-outline-primary btn-sm">✏️ Editar</a>
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
-{% else %}
-  <p>No has registrado horarios disponibles.</p>
-{% endif %}
+    <hr>
+
+    <h3>🕒 Mis Horarios Registrados</h3>
+
+    {% if horarios_disponibles %}
+        <div class="horario-card">
+            <table class="tabla-horarios">
+                <thead>
+                    <tr>
+                        <th>Día</th>
+                        <th>Inicio</th>
+                        <th>Término</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for h in horarios_disponibles %}
+                    <tr>
+                        <td>{{ h.get_dia_display }}</td>
+                        <td>{{ h.hora_inicio }}</td>
+                        <td>{{ h.hora_termino }}</td>
+                        <td>
+                            <form action="{% url 'eliminar_horario' h.id %}" method="post" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger btn-sm">🗑️ Eliminar</button>
+                            </form>
+                            <a href="{% url 'editar_horario' h.id %}" class="btn btn-outline-primary btn-sm">✏️ Editar</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p>No has registrado horarios disponibles. Usa el botón “Agregar horario disponible”.</p>
+    {% endif %}
+
+</main>
+
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css" rel="stylesheet" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/locales/es.js"></script>
 
 <script>
 function copiarCodigo() {
-  const codigo = document.getElementById("codigo").textContent;
-  navigator.clipboard.writeText(codigo);
-  alert("Código copiado: " + codigo);
+    const codigo = document.getElementById("codigo").textContent;
+    navigator.clipboard.writeText(codigo);
+    alert("Código copiado: " + codigo);
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+    const calendarEl = document.getElementById('calendar');
+    const disponibilidad = JSON.parse('{{ disponibilidad_json|escapejs }}');
+    const tareas = JSON.parse('{{ tareas_json|escapejs }}');
+
+    const dias = { 'DOM': 0, 'LUN': 1, 'MAR': 2, 'MIE': 3, 'JUE': 4, 'VIE': 5, 'SAB': 6 };
+    const eventos = [];
+
+    // Disponibilidad
+    for (let d in disponibilidad) {
+        const dia = dias[d];
+        disponibilidad[d].forEach(slot => {
+            eventos.push({
+                daysOfWeek: [dia],
+                startTime: slot.inicio,
+                endTime: slot.termino,
+                display: 'background',
+                color: '#87CEEB',
+                title: 'Disponible'
+            });
+        });
+    }
+
+    // Tareas
+    tareas.forEach(t => {
+        eventos.push({
+            title: 'TAREA: ' + t.nombre + ' (' + t.responsable + ')',
+            start: moment(t.fecha_creacion).format('YYYY-MM-DD'),
+            allDay: true,
+            backgroundColor: '#dc3545',
+            borderColor: '#dc3545'
+        });
+    });
+
+    const calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        locale: 'es',
+        height: 'auto',
+        headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,timeGridWeek,timeGridDay'
+        },
+        events: eventos
+    });
+
+    calendar.render();
+});
 </script>
 
 <style>
-  h2 {
-    color: #333;
-    margin-bottom: 20px;
-  }
+h2 { color: #333; margin-bottom: 20px; }
+.mensajes { margin-bottom: 20px; }
+.alert { padding: 10px; border-radius: 6px; margin-bottom: 10px; }
+.alert-success { background: #d4edda; color: #155724; }
+.alert-error, .alert-danger { background: #f8d7da; color: #721c24; }
 
-  .familia-card {
+.familia-card {
     background-color: #f9f9f9;
     border: 2px solid #87CEEB;
     border-radius: 12px;
     padding: 20px;
     margin-bottom: 20px;
     box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-  }
+}
+.familia-card span { color: #4CAF50; font-weight: bold; }
 
-  .familia-card h3 {
-    color: #333;
-    margin-bottom: 10px;
-  }
-
-  .familia-card span {
-    color: #4CAF50;
-    font-weight: bold;
-  }
-
-  .btn {
+.btn {
     background-color: #87CEEB;
     color: white;
     padding: 10px 20px;
@@ -126,101 +201,21 @@ function copiarCodigo() {
     margin-top: 10px;
     display: inline-block;
     transition: 0.3s;
-  }
-
-  .btn:hover {
-    background-color: #5bb8e0;
-  }
-
-  .btn-crear {
-    background-color: #4CAF50;
-  }
-
-  .btn-crear:hover {
-    background-color: #43a047;
-  }
-
-  .btn-unirse {
-    background-color: #2196F3;
-  }
-
-  .btn-unirse:hover {
-    background-color: #1976D2;
-  }
-
-  .btn-success {
-    background-color: #ffa726;
-  }
-
-  .btn-success:hover {
-    background-color: #fb8c00;
-  }
-
-  .botones-familia {
-    margin-top: 20px;
-  }
-
-  .horario-boton {
-    margin-top: 20px;
-    text-align: center;
-  }
-
-  /* 🔹 Estilo para la tabla de horarios disponibles */
-  .horario-card {
-    margin-top: 25px;
-    background-color: #fff8e1;
-    border: 2px solid #ffcc80;
-    border-radius: 10px;
-    padding: 15px;
-  }
-
-  .horario-card h4 {
-    color: #e65100;
-    margin-bottom: 10px;
-  }
-
-  .tabla-horarios {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 15px;
-  }
-
-  .tabla-horarios th, .tabla-horarios td {
-    border: 1px solid #ccc;
-    padding: 8px;
-    text-align: center;
-  }
-
-  .tabla-horarios th {
-    background-color: #87CEEB;
-    color: white;
-  }
-
-  .btn-danger {
-    background-color: #e74c3c;
-    color: white;
-    border: none;
-    padding: 4px 8px;
-    border-radius: 6px;
-  }
-
-  .btn-danger:hover {
-    background-color: #c0392b;
-  }
-
-  .btn-outline-primary {
-    background-color: white;
-    border: 1px solid #2196F3;
-    color: #2196F3;
-    padding: 4px 8px;
-    border-radius: 6px;
-    text-decoration: none;
-    font-size: 0.9em;
-  }
-
-  .btn-outline-primary:hover {
-    background-color: #2196F3;
-    color: white;
-  }
+    cursor: pointer;
+}
+.btn:hover { background-color: #5bb8e0; }
+.btn-crear { background-color: #4CAF50; }
+.btn-crear:hover { background-color: #43a047; }
+.btn-unirse { background-color: #2196F3; }
+.btn-unirse:hover { background-color: #1976D2; }
+.btn-success { background-color: #ffa726; }
+.btn-success:hover { background-color: #fb8c00; }
+.btn-danger { background-color: #e74c3c; color: white; border: none; padding: 4px 8px; border-radius: 6px; }
+.btn-danger:hover { background-color: #c0392b; }
+.btn-outline-primary {
+    background: white; border: 1px solid #2196F3; color: #2196F3;
+    padding: 4px 8px; border-radius: 6px; text-decoration: none;
+}
+.btn-outline-primary:hover { background-color: #2196F3; color: white; }
 </style>
-{% endblock %}
+{% endblock content %}

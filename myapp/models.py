@@ -1,6 +1,45 @@
 from django.db import models
 import random, string
 from django.contrib.auth.models import User
+from datetime import date
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from django import forms
+
+#🚨🚨🚨NO TOCAR NADA DE LO QUE YA ESTA HECHO A MENOS QUE SEA NECESARIO🚨🚨🚨
+
+class Perfil(models.Model):
+    usuario = models.OneToOneField(User, on_delete=models.CASCADE) 
+    fecha_nacimiento = models.DateField(null=True, blank=True)
+
+    def edad(self):
+        if self.fecha_nacimiento:
+            hoy = date.today()
+            return hoy.year - self.fecha_nacimiento.year - (
+                (hoy.month, hoy.day) < (self.fecha_nacimiento.month, self.fecha_nacimiento.day)
+            )
+        return None
+
+    def __str__(self):
+        return self.usuario.username
+
+@receiver(post_save, sender=User)
+def crear_perfil(sender, instance, created, **kwargs):
+    if created:
+        Perfil.objects.create(usuario=instance)
+
+@receiver(post_save, sender=User)
+def guardar_perfil(sender, instance, **kwargs):
+    if hasattr(instance, 'perfil'):
+        instance.perfil.save()
+
+class PerfilForm(forms.ModelForm):
+    class Meta:
+        model = Perfil
+        fields = ['fecha_nacimiento']
+        widgets = {
+            'fecha_nacimiento': forms.DateInput(attrs={'type': 'date'}),
+        }
 
 class Familia(models.Model):
     nombre = models.CharField(max_length=100, unique=True)
@@ -12,17 +51,25 @@ class Familia(models.Model):
         return f"Familia {self.nombre} (Jefe: {self.jefe.username})"
 
     def save(self, *args, **kwargs):
+        """Genera un código de invitación único automáticamente al guardar."""
         if not self.codigo_invitacion:
-            self.codigo_invitacion = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
+            while True:
+                codigo = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
+                if not Familia.objects.filter(codigo_invitacion=codigo).exists():
+                    self.codigo_invitacion = codigo
+                    break
         super().save(*args, **kwargs)
 
     def generar_codigo(self):
+        """Permite regenerar un nuevo código de invitación."""
         letras = string.ascii_uppercase + string.digits
-        codigo = ''.join(random.choices(letras, k=8))
-        while Familia.objects.filter(codigo_invitacion=codigo).exists():
+        while True:
             codigo = ''.join(random.choices(letras, k=8))
-        self.codigo_invitacion = codigo
-        self.save()
+            if not Familia.objects.filter(codigo_invitacion=codigo).exists():
+                self.codigo_invitacion = codigo
+                self.save()
+                break
+
 
 class Horario(models.Model):
     DIAS_SEMANA = [
@@ -43,6 +90,8 @@ class Horario(models.Model):
 
     def __str__(self):
         return f"{self.usuario.username} - {self.get_dia_display()} ({self.hora_inicio} a {self.hora_termino})"
+
+
 class Tarea(models.Model):
     ESTADOS = [
         ('pendiente', 'Pendiente'),
@@ -51,16 +100,16 @@ class Tarea(models.Model):
 
     nombre = models.CharField(max_length=100)
     responsable = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
-    familia = models.ForeignKey(Familia, on_delete=models.CASCADE, related_name='tareas')
+    familia = models.ForeignKey('Familia', on_delete=models.CASCADE, related_name='tareas', null=True, blank=True)
     estado = models.CharField(max_length=10, choices=ESTADOS, default='pendiente')
     fecha_creacion = models.DateTimeField(auto_now_add=True)
-    familia = models.ForeignKey('Familia', on_delete=models.CASCADE, related_name='tareas', null=True, blank=True)
 
     def __str__(self):
         return f"{self.nombre} ({self.estado})"
 
     def asignar_aleatoriamente(self):
+        """Asigna la tarea a un usuario aleatorio del sistema."""
         usuarios_disponibles = list(User.objects.all())
         if usuarios_disponibles:
-            self.asignado_a = random.choice(usuarios_disponibles)
+            self.responsable = random.choice(usuarios_disponibles)
             self.save()
