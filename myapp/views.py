@@ -12,7 +12,7 @@ from .serializers import TareaSerializer
 from itertools import chain
 
 # VISTAS HTML PRINCIPALES (TOCAR SOLO DE SER NECESARIO Y CON CUIDADO)
-
+#prueba github
 def inicio(request):
     #Vista de inicio: muestra la familia del usuario si existe.
     familia = None
