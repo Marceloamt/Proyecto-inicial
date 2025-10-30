@@ -1,7 +1,7 @@
 from django import forms
 from .models import Horario, Perfil
 from django.contrib.auth.forms import UserCreationForm
-from django.contrib.auth import get_user_model # Cambiado a get_user_model
+from django.contrib.auth import get_user_model 
 User = get_user_model()
 
 class HorarioForm(forms.ModelForm):
@@ -50,3 +50,9 @@ class PerfilForm(forms.ModelForm):
         widgets = {
             'fecha_nacimiento': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
         }
+
+class UserEditForm(forms.ModelForm):
+    email = forms.EmailField(required=True, label='Nuevo Correo Electrónico')
+    class Meta:
+        model = User
+        fields = ['email']

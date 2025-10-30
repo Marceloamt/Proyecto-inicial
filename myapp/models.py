@@ -42,7 +42,7 @@ class PerfilForm(forms.ModelForm):
         }
 
 class Familia(models.Model):
-    nombre = models.CharField(max_length=100, unique=True)
+    nombre = models.CharField(max_length=100)
     jefe = models.OneToOneField(User, on_delete=models.CASCADE, related_name='familia_jefe')
     miembros = models.ManyToManyField(User, related_name='familias', blank=True)
     codigo_invitacion = models.CharField(max_length=8, unique=True, blank=True)

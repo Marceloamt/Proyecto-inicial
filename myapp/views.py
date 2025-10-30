@@ -6,13 +6,14 @@ from django.contrib.auth import login, logout
 from rest_framework import viewsets
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 import json # Necesario para serializar datos a JavaScript
-from .models import Tarea, Familia, Horario, Perfil, PerfilForm
-from .forms import HorarioForm, RegistroForm
+from .models import Tarea, Familia, Horario, Perfil
+from .forms import HorarioForm, RegistroForm, PerfilForm, UserEditForm
 from .serializers import TareaSerializer
 from itertools import chain
 
-# VISTAS HTML PRINCIPALES (TOCAR SOLO DE SER NECESARIO Y CON CUIDADO)
-#prueba github
+#🚨🚨🚨NO CAMBIAR NOMBRES DE VARIABLES NI FUNCIONES A MENOS QUE SEA ABSOLUTA Y ESTRICTAMENTE NECESARIO 🚨🚨🚨
+# VISTAS HTML PRINCIPALES (🚨TOCAR VISTAS EXISTENTES SOLO DE SER NECESARIO Y CON CUIDADO🚨)
+
 def inicio(request):
     #Vista de inicio: muestra la familia del usuario si existe.
     familia = None
@@ -252,22 +253,28 @@ def ver_horario(request):
 
 @login_required
 def editar_horario(request, horario_id):
-    horario = get_object_or_404(Horario, id=horario_id, usuario=request.user)
-    #Permite editar un horario existente
+    #obteiene la instancia del horario, asegurando que solo el dueño pueda editarlo.
+    horario_instancia = get_object_or_404(Horario, id=horario_id, usuario=request.user)
+    
     if request.method == 'POST':
-        dia = request.POST.get('dia')
-        hora_inicio = request.POST.get('hora_inicio')
-        hora_termino = request.POST.get('hora_termino')
-
-        if dia and hora_inicio and hora_termino:
-            horario.dia = dia
-            horario.hora_inicio = hora_inicio
-            horario.hora_termino = hora_termino
-            horario.save()
-            messages.success(request, "Horario actualizado correctamente.")
-            return redirect('ver_horario')
-
-    return render(request, 'editar_horario.html', {'horario': horario})
+        form = HorarioForm(request.POST, instance=horario_instancia)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Horario actualizado correctamente. ✅")
+            #redirige a la página principal de perfil donde se ven los horarios
+            return redirect('perfil') 
+        else:
+            messages.error(request, "Hubo un error al guardar el horario. Revisa los campos.")
+            
+    else:
+        # Inicializa el formulario llenado antes con los datos actuales
+        form = HorarioForm(instance=horario_instancia)
+        
+    contexto = {
+        'form': form,
+        'horario': horario_instancia
+    }
+    return render(request, 'editar_horario.html', contexto)
 
 @login_required
 def eliminar_horario(request, horario_id):
