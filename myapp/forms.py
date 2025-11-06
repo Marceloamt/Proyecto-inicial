@@ -1,5 +1,5 @@
 from django import forms
-from .models import Horario, Perfil
+from .models import Horario, Perfil, Tarea
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import get_user_model 
 User = get_user_model()
@@ -56,3 +56,35 @@ class UserEditForm(forms.ModelForm):
     class Meta:
         model = User
         fields = ['email']
+
+class TareaForm(forms.ModelForm):
+    def clean(self):
+        cleaned_data = super().clean()
+        requiere_edad_minima = cleaned_data.get("requiere_edad_minima")
+        edad_minima = cleaned_data.get("edad_minima")
+
+        if requiere_edad_minima and (edad_minima is None or edad_minima <= 0):
+            self.add_error('edad_minima', 'Debes ingresar una edad mínima válida si marcas la restricción.')
+    
+        tiempo = cleaned_data.get("tiempo_requerido_minutos")
+        if tiempo is not None and tiempo <= 0:
+             self.add_error('tiempo_requerido_minutos', 'El tiempo requerido debe ser un valor positivo.')
+
+        return cleaned_data
+
+    class Meta:
+        model = Tarea
+        fields = [
+            'nombre', 
+            'responsable', # Si es asignable al crear
+            'tiempo_requerido_minutos', 
+            'requiere_edad_minima', 
+            'edad_minima',
+        ]
+        widgets = {
+            'nombre': forms.TextInput(attrs={'class': 'form-control'}),
+            'responsable': forms.Select(attrs={'class': 'form-control'}),
+            'tiempo_requerido_minutos': forms.NumberInput(attrs={'class': 'form-control', 'min': 10, 'placeholder': 'Tiempo en minutos'}),
+            'requiere_edad_minima': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'edad_minima': forms.NumberInput(attrs={'class': 'form-control', 'min': 1, 'placeholder': 'Edad mínima'}),
+        }

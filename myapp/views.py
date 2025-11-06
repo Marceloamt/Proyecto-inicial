@@ -7,7 +7,7 @@ from rest_framework import viewsets
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 import json # Necesario para serializar datos a JavaScript
 from .models import Tarea, Familia, Horario, Perfil
-from .forms import HorarioForm, RegistroForm, PerfilForm, UserEditForm
+from .forms import HorarioForm, RegistroForm, PerfilForm, UserEditForm, TareaForm
 from .serializers import TareaSerializer
 from itertools import chain
 
@@ -96,45 +96,72 @@ def perfil(request):
 
     return render(request, 'perfil.html', contexto)
 
-
 #gestión de tareas
 @login_required
 def tareas(request):
-    #Muestra y permite agregar tareas dentro de la familia del usuario
     usuario = request.user
-    familia_usuario = (
-        Familia.objects.filter(jefe=usuario).first()
-        or Familia.objects.filter(miembros=usuario).first()
-    )
+    
+    # Obtiene TODAS las familias donde el usuario es jefe
+    familias_jefe = Familia.objects.filter(jefe=usuario)
 
-    if not familia_usuario:
+    #Si el usuario es jefe en al menos una familia
+    if familias_jefe.exists():
+        # Ve todas sus tareas de jefe
+        tareas = Tarea.objects.filter(familia__in=familias_jefe).order_by('-fecha_creacion')
+        miembros = {} # Diccionario para almacenar miembros por familia
+        
+        # 3. Preparar los datos de miembros y el formulario
+        for familia in familias_jefe:
+            miembros[familia.id] = list(chain([familia.jefe], familia.miembros.all()))
+
+        if request.method == 'POST':
+            # La vista ahora necesita saber a qué familia aplicar la tarea
+            familia_id = request.POST.get('familia_seleccionada')
+            if not familia_id:
+                messages.error(request, "Debe seleccionar una familia para crear la tarea.")
+                form = TareaForm(request.POST) # Reusar datos POST para mostrar errores
+            else:
+                familia_seleccionada = get_object_or_404(Familia, id=familia_id, jefe=usuario)
+                form = TareaForm(request.POST) 
+                
+                if form.is_valid():
+                    tarea = form.save(commit=False)
+                    tarea.familia = familia_seleccionada # Asignar la familia seleccionada
+                    tarea.save()
+                    messages.success(request, f"Tarea creada exitosamente para '{familia_seleccionada.nombre}'. ✅")
+                    return redirect('tareas')
+                else:
+                    messages.error(request, "Error al crear la tarea. Revisa los campos marcados.")
+        else:
+            form = TareaForm()
+
         return render(request, 'tareas.html', {
-            'tareas': [],
-            'mensaje': "No perteneces a ninguna familia. Crea o únete a una para ver tareas."
+            'familias_jefe': familias_jefe, # Pasamos todas las familias de jefe
+            'tareas': tareas,
+            'miembros': miembros,
+            'form': form,
+            'es_jefe_multi': familias_jefe.count() > 1, # Indica si maneja más de una familia
+            'es_jefe': True, # Es jefe en al menos una familia
         })
 
-    if request.method == 'POST':
-        nombre = request.POST.get('nombre')
-        responsable_username = request.POST.get('responsable')
-        if nombre and responsable_username:
-            try:
-                responsable = User.objects.get(username=responsable_username)
-            except User.DoesNotExist:
-                responsable = usuario
-            Tarea.objects.create(
-                nombre=nombre,
-                responsable=responsable,
-                familia=familia_usuario
-            )
-        return redirect('tareas')
+    #Si el usuario es SOLO miembro (código original de miembro)
+    familia_miembro = Familia.objects.filter(miembros=usuario).first()
+    if familia_miembro:
+        tareas = Tarea.objects.filter(familia=familia_miembro).order_by('-fecha_creacion')
+        
+        return render(request, 'tareas.html', {
+            'tareas': tareas,
+            'familia': familia_miembro, # Solo una familia para miembros
+            'es_jefe': False,
+            'miembros': list(chain([familia_miembro.jefe], familia_miembro.miembros.all())),
+            'form': TareaForm() 
+        })
 
-    tareas = Tarea.objects.filter(familia=familia_usuario)
-    miembros = list(chain([familia_usuario.jefe], familia_usuario.miembros.all()))
-
+    # Si no pertenece a ninguna familia
     return render(request, 'tareas.html', {
-        'tareas': tareas,
-        'familia': familia_usuario,
-        'miembros': miembros
+        'tareas': [],
+        'mensaje': "No perteneces a ninguna familia. Crea o únete a una para ver tareas.",
+        'form': TareaForm() 
     })
 
 @login_required
@@ -145,6 +172,56 @@ def completar_tarea(request, id):
         tarea.estado = "hecha" if tarea.estado == "pendiente" else "pendiente"
         tarea.save()
     return redirect('tareas')
+
+@login_required
+def editar_tarea(request, tarea_id):
+    # Obtiene la tarea, asegurando que el usuario sea el jefe de la familia a la que pertenece
+    tarea = get_object_or_404(Tarea, id=tarea_id)
+
+    # Verificar si el usuario es jefe de la familia de la tarea
+    if not Familia.objects.filter(jefe=request.user, id=tarea.familia.id).exists():
+        messages.error(request, "❌ No tienes permiso para editar esta tarea.")
+        return redirect('tareas')
+
+    #Manejo del formulario
+    if request.method == 'POST':
+        form = TareaForm(request.POST, instance=tarea)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f"Tarea '{tarea.nombre}' actualizada correctamente. ✅")
+            return redirect('tareas')
+        else:
+            messages.error(request, "Hubo un error al guardar la tarea. Revisa los campos.")
+    else:
+        # Petición GET: Cargar el formulario prellenado
+        form = TareaForm(instance=tarea)
+
+    contexto = {
+        'form': form,
+        'tarea': tarea
+    }
+    return render(request, 'editar_tarea.html', contexto)
+
+
+@login_required
+def eliminar_tarea(request, tarea_id):
+    # Obtiene la tarea
+    tarea = get_object_or_404(Tarea, id=tarea_id)
+
+    # Verificar si el usuario es jefe de la familia de la tarea
+    if not Familia.objects.filter(jefe=request.user, id=tarea.familia.id).exists():
+        messages.error(request, "❌ No tienes permiso para eliminar esta tarea.")
+        return redirect('tareas')
+
+    # Lógica de eliminación
+    if request.method == 'POST':
+        nombre_tarea = tarea.nombre
+        tarea.delete()
+        messages.success(request, f"Tarea '{nombre_tarea}' eliminada correctamente. 🗑️")
+        return redirect('tareas')
+
+    # Petición GET: Mostrar la página de confirmación de eliminación (opcional)
+    return render(request, 'eliminar_tarea.html', {'tarea': tarea})
 
 #gestión de familias
 @login_required

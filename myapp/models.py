@@ -103,6 +103,21 @@ class Tarea(models.Model):
     familia = models.ForeignKey('Familia', on_delete=models.CASCADE, related_name='tareas', null=True, blank=True)
     estado = models.CharField(max_length=10, choices=ESTADOS, default='pendiente')
     fecha_creacion = models.DateTimeField(auto_now_add=True)
+    
+    # Tiempo y Restricción de Edad
+    tiempo_requerido_minutos = models.IntegerField(
+        default=30, 
+        help_text="Tiempo estimado para completar la tarea (en minutos)."
+    )
+    requiere_edad_minima = models.BooleanField(
+        default=False, 
+        help_text="Marcar si esta tarea solo puede ser realizada por personas mayores a una edad específica."
+    )
+    edad_minima = models.IntegerField(
+        null=True, 
+        blank=True, 
+        help_text="Edad mínima requerida para realizar la tarea (solo si requiere_edad_minima está marcado)."
+    )
 
     def __str__(self):
         return f"{self.nombre} ({self.estado})"

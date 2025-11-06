@@ -2,60 +2,161 @@
 {% block title %}Tareas | HomeBalance{% endblock %}
 
 {% block content %}
-<div class="container">
+<div class="container" style="max-width: 900px; margin: 0 auto;">
     <h2>🧹 Lista de Tareas del Hogar</h2>
-
+    
+    {% include "messages.html" %} 
+    
     {% if mensaje %}
-        <div class="mensaje">{{ mensaje }}</div>
+        <p class="alert alert-info">{{ mensaje }}</p>
     {% endif %}
 
-    <!-- Formulario para agregar una nueva tarea -->
-    <form method="POST">
-    {% csrf_token %}
-    <input type="text" name="nombre" placeholder="Nombre de la tarea" required>
+    {# mi comentario: Sección de Creación de Tareas, restringida solo si el usuario es jefe #}
+    {% if es_jefe %}
+        <section class="form-card" style="border: 1px solid #ccc; padding: 20px; margin-bottom: 20px;">
+            <h3>➕ Crear Nueva Tarea</h3>
+            
+            <form method="POST">
+                {% csrf_token %}
+                
+                {# mi comentario: Muestro un selector de familia si administra más de una #}
+                {% if familias_jefe|length > 1 %}
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label for="familia_seleccionada" style="font-weight: bold;">Selecciona la Familia:</label>
+                        <select name="familia_seleccionada" id="familia_seleccionada" required class="form-control">
+                            <option value="">--- Seleccionar Familia ---</option>
+                            {% for familia in familias_jefe %}
+                                <option value="{{ familia.id }}">{{ familia.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                {% elif familias_jefe %}
+                    {# Si solo tiene una familia, la envío oculta #}
+                    <input type="hidden" name="familia_seleccionada" value="{{ familias_jefe.0.id }}">
+                    <p style="font-weight: bold;">Creando tarea para: 🏠 {{ familias_jefe.0.nombre }}</p>
+                {% endif %}
 
-    <select name="responsable" required>
-        <option value="">Selecciona responsable</option>
-        {% for miembro in familia.miembros.all %}
-            <option value="{{ miembro.id }}">{{ miembro.username }}</option>
-        {% endfor %}
-        <option value="{{ familia.jefe.id }}">{{ familia.jefe.username }} (Jefe)</option>
-    </select>
+                <hr>
 
-    <button type="submit">➕ Agregar tarea</button>
-</form>
+                {# Renderizo el formulario de Tarea (incluye tiempo, edad, responsable) #}
+                {{ form.as_p }} 
 
-
-
+                <button type="submit" class="btn btn-primary" style="margin-top: 15px;">➕ Crear Tarea</button>
+            </form>
+        </section>
+    {% else %}
+        {# Mensaje para usuarios que no son jefes #}
+        {% if familia %}
+        <p class="alert alert-warning" style="padding: 15px;">
+            Solo el jefe de hogar puede crear nuevas tareas. Eres miembro de la familia **{{ familia.nombre }}**.
+        </p>
+        {% endif %}
+    {% endif %}
+    
     <hr>
 
-    <!-- Lista de tareas desde la base de datos -->
+    {# Lista de Tareas #}
     <ul>
         {% for tarea in tareas %}
-            <section>
-                {% if tarea.estado == "hecha" %}
-                    ✅ <span style="color: gray; text-decoration: line-through;">
-                        {{ tarea.nombre }} — {{ tarea.responsable }}
-                    </span>
-                    (<em>{{ tarea.estado }}</em>)
-                    <form action="{% url 'completar_tarea' tarea.id %}" method="POST" style="display:inline;">
-                        {% csrf_token %}
-                        <button type="submit">↩️ Marcar como pendiente</button>
-                    </form>
-                {% else %}
-                    🕓 <span style="color: red;">
-                        {{ tarea.nombre }} — {{ tarea.responsable }}
-                    </span>
-                    (<em>{{ tarea.estado }}</em>)
-                    <form action="{% url 'completar_tarea' tarea.id %}" method="POST" style="display:inline;">
-                        {% csrf_token %}
-                        <button type="submit">✅ Marcar como hecha</button>
-                    </form>
+            <section style="margin-bottom: 15px; padding: 10px; border-left: 5px solid {% if tarea.estado == 'hecha' %}green{% else %}red{% endif %}; background-color: #f9f9f9;">
+                
+                {# Título y Responsable #}
+                <p style="margin: 0; font-size: 1.1em; font-weight: bold;">
+                    {% if tarea.estado == "hecha" %}✅{% else %}🕓{% endif %}
+                    {{ tarea.nombre }} — Responsable: {{ tarea.responsable.username|default:"Sin asignar" }}
+                </p>
+
+                {# Detalles de Familia, Tiempo y Edad #}
+                <small style="display: block; margin-top: 5px; margin-bottom: 10px; color: #555;">
+                    {% if es_jefe %}
+                        🏠 Familia: <strong>{{ tarea.familia.nombre }}</strong> | 
+                    {% endif %}
+                    ⏱️ Tiempo: {{ tarea.tiempo_requerido_minutos }} min. | 
+                    👶 Edad Mínima: {% if tarea.requiere_edad_minima %}{{ tarea.edad_minima }}{% else %}Ninguna{% endif %}
+                </small>
+
+                {# Botones de Acción #}
+                <form action="{% url 'completar_tarea' tarea.id %}" method="POST" style="display:inline; margin-top: 15px;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-sm btn-action">
+                        {% if tarea.estado == "hecha" %}↩️ Marcar como pendiente{% else %}✅ Marcar como hecha{% endif %}
+                    </button>
+                </form>
+                
+                {# Botones de Edición y Eliminación: SOLO PARA JEFES con estilos personalizados #}
+                {% if es_jefe %}
+                    <a href="{% url 'editar_tarea' tarea.id %}" class="btn btn-editar" style="margin-left: 5px;">✏️ Editar</a>
+                    <a href="{% url 'eliminar_tarea' tarea.id %}" class="btn btn-eliminar" style="margin-left: 5px;">🗑️ Eliminar</a>
                 {% endif %}
+
             </section>
         {% empty %}
             <li>No hay tareas registradas aún 💤</li>
         {% endfor %}
     </ul>
+
+    {# mi comentario: Bloque de Estilos para dar la apariencia a los botones #}
+    <style>
+        /* Estilos para los botones de editar y eliminar (misma altura)*/
+        .btn-editar, .btn-eliminar {
+            line-height: 1.2; 
+            padding: 8px 15px; 
+            
+            border-radius: 5px; 
+            text-decoration: none; 
+            display: inline-flex; 
+            align-items: center; 
+            gap: 5px; 
+            font-size: 1em; 
+            cursor: pointer;
+            transition: all 0.2s ease-in-out; 
+            vertical-align: middle; 
+        }
+        
+        .btn-editar {
+            background-color: white; 
+            color: #007bff; 
+            border: 1px solid #007bff; 
+        }
+
+        .btn-editar:hover {
+            background-color: #e6f2ff; 
+            color: #0056b3; 
+            border-color: #0056b3;
+        }
+
+        .btn-eliminar {
+            background-color: #ffffff; 
+            color: #dc3545; 
+            border: 1px solid #dc3545; 
+        }
+
+        .btn-eliminar:hover {
+            background-color: #c82333; 
+            border-color: #bd2130;
+        }
+        
+        /* Estilo para el botón de completar/desmarcar tarea */
+        .btn-action {
+            background-color: white; /* Un azul neutro */
+            color: black;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            border: 2px solid #22dc3b;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background-color 0.2s;
+        }
+
+        .btn-action:hover {
+            background-color: #0056b3;
+        }
+        
+        .btn-editar, .btn-eliminar, .btn-action {
+            /* Asegurar que se vean bien junto a los botones del form */
+            height: fit-content;
+        }
+    </style>
 </div>
 {% endblock %}

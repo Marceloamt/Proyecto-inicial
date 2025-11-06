@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Editar Tarea{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2>✏️ Editar Tarea: {{ tarea.nombre }}</h2>
+    
+    <form method="post">
+        {% csrf_token %}
+        
+        {{ form.as_p }}
+
+        <button type="submit" class="btn btn-success">Guardar Cambios</button>
+        <a href="{% url 'tareas' %}" class="btn btn-secondary">Cancelar</a>
+    </form>
+</div>
+{% endblock %}

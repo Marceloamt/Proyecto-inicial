@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block title %}Editar Horario | HomeBalance{% endblock %}
+
+{% block content %}
+<main style="padding: 40px; max-width: 800px; margin: 0 auto;">
+    <h2>✏️ Editar Horario</h2>
+    
+    {% if messages %}
+        <div class="mensajes">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <div class="card" style="padding: 20px; border: 1px solid #ccc; border-radius: 8px;">
+        <form method="post">
+            {% csrf_token %}
+            
+            {{ form.as_p }} 
+
+            <button type="submit" class="btn btn-crear">💾 Guardar Cambios</button>
+            <a href="{% url 'perfil' %}" class="btn" style="background-color: #f1f1f1; color: #333;">❌ Cancelar</a>
+        </form>
+    </div>
+</main>
+{% endblock content %}
