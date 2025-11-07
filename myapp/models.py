@@ -19,6 +19,26 @@ class Perfil(models.Model):
                 (hoy.month, hoy.day) < (self.fecha_nacimiento.month, self.fecha_nacimiento.day)
             )
         return None
+    
+    def minutos_disponibles(self):
+        #calcula el total de minutos disponibles sumando los bloques de Horario
+        
+        # Obtenemos los horarios del usuario actual que están marcados como disponibles
+        horarios_query = self.usuario.horario_set.filter(disponible=True).annotate(
+            # Calcula la diferencia entre hora_termino y hora_inicio
+            duracion_td=ExpressionWrapper(
+                F('hora_termino') - F('hora_inicio'),
+                output_field=fields.DurationField()
+            )
+        )
+        
+        total_minutos = 0
+        for horario in horarios_query:
+            # Convertir la duración total a segundos y luego a minutos
+            total_segundos = horario.duracion_td.total_seconds()
+            total_minutos += int(total_segundos / 60)
+            
+        return total_minutos
 
     def __str__(self):
         return self.usuario.username
@@ -103,7 +123,7 @@ class Tarea(models.Model):
     familia = models.ForeignKey('Familia', on_delete=models.CASCADE, related_name='tareas', null=True, blank=True)
     estado = models.CharField(max_length=10, choices=ESTADOS, default='pendiente')
     fecha_creacion = models.DateTimeField(auto_now_add=True)
-    
+
     # Tiempo y Restricción de Edad
     tiempo_requerido_minutos = models.IntegerField(
         default=30, 

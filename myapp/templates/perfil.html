@@ -17,19 +17,29 @@
     <div class="perfil-edicion-card familia-card" style="margin-bottom: 20px;">
         <h3>🎂 Datos Personales</h3>
         
-        <p><strong>Edad (calculada):</strong> 
-            {{ perfil.edad|default:"Sin registro" }} años
-        </p>
+        {# Corrección de edad para mostrar "No registrada" si es None #}
+        <p><strong>Edad (calculada):</strong> {{ perfil.edad|default:"No registrada" }} años</p>
 
         <form method="post" class="form-perfil">
             {% csrf_token %}
             
+            {# Asumiendo que 'form' contiene PerfilForm (fecha_nacimiento) #}
             {{ form.as_p }} 
 
             <button type="submit" class="btn btn-crear">💾 Guardar Fecha de Nacimiento</button>
         </form>
     </div>
-    <hr>
+    <div class="botones-gestion" style="display: flex; gap: 20px; margin-bottom: 30px; padding: 0; border: none; justify-content: center;">
+        
+        {# Botón de UNIRSE: Visible siempre #}
+        <a href="{% url 'unirse_familia' %}" class="btn btn-unirse" style="background-color: #2196F3; border: none;">🔑 Unirse con código</a>
+    
+        {# Botón de CREAR: Visible siempre #}
+        <a href="{% url 'crear_familia' %}" class="btn btn-crear" style="background-color: #4CAF50; border: none;">🏡 Crear mi familia</a>
+</div>
+    </div>
+
+
     {% if familia %}
         <div class="familia-card">
             <h3>🏡 Familia: <span>{{ familia.nombre }}</span></h3>
@@ -60,14 +70,8 @@
             </div>
         </div>
     {% else %}
-        <p>No perteneces a ninguna familia.</p>
-        <div class="botones-familia">
-            <a href="{% url 'crear_familia' %}" class="btn btn-crear">🏡 Crear mi familia</a>
-            <a href="{% url 'unirse_familia' %}" class="btn btn-unirse">🔑 Unirse con código</a>
-        </div>
+        <p class="alert alert-info">Aún no tienes una familia principal asignada.</p>
     {% endif %}
-
-    <hr>
 
     <h3>📅 Calendario de Tareas y Disponibilidad</h3>
     <div id='calendar' style="margin-top: 20px;"></div>
@@ -218,4 +222,4 @@ h2 { color: #333; margin-bottom: 20px; }
 }
 .btn-outline-primary:hover { background-color: #2196F3; color: white; }
 </style>
-{% endblock content %}
+{% endblock %}
