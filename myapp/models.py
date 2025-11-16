@@ -5,8 +5,20 @@ from datetime import date
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django import forms
+from django.db.models import F, ExpressionWrapper, fields 
 
 #🚨🚨🚨NO TOCAR NADA DE LO QUE YA ESTA HECHO A MENOS QUE SEA NECESARIO🚨🚨🚨
+
+# Opciones para los días de la semana
+DIAS_SEMANA_CHOICES = [
+    ('LUN', 'Lunes'),
+    ('MAR', 'Martes'),
+    ('MIE', 'Miércoles'),
+    ('JUE', 'Jueves'),
+    ('VIE', 'Viernes'),
+    ('SAB', 'Sábado'),
+    ('DOM', 'Domingo'),
+]
 
 class Perfil(models.Model):
     usuario = models.OneToOneField(User, on_delete=models.CASCADE) 
@@ -138,13 +150,13 @@ class Tarea(models.Model):
         blank=True, 
         help_text="Edad mínima requerida para realizar la tarea (solo si requiere_edad_minima está marcado)."
     )
+    #CAMPO PARA RECURRENCIA SEMANAL
+    dias_recurrencia_csv = models.CharField(
+        max_length=50, 
+        blank=True, 
+        null=True,
+        help_text="Días de la semana en formato CSV (ej: LUN,MIE,VIE)."
+    )
 
     def __str__(self):
         return f"{self.nombre} ({self.estado})"
-
-    def asignar_aleatoriamente(self):
-        """Asigna la tarea a un usuario aleatorio del sistema."""
-        usuarios_disponibles = list(User.objects.all())
-        if usuarios_disponibles:
-            self.responsable = random.choice(usuarios_disponibles)
-            self.save()

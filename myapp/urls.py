@@ -4,7 +4,7 @@ from . import views
 from django.contrib.auth import views as auth_views
 
 router = routers.DefaultRouter()
-router.register(r'tareas', views.TareaViewSet)
+router.register(r'tareas', views.TareaViewSet, basename='tarea')
 
 urlpatterns = [
     path('', views.inicio, name='inicio'),
@@ -28,4 +28,6 @@ urlpatterns = [
     path('horario/ver/', views.ver_horario, name='ver_horario'),
     path('horario/editar/<int:horario_id>/', views.editar_horario, name='editar_horario'),
     path('horario/eliminar/<int:horario_id>/', views.eliminar_horario, name='eliminar_horario'),
+    path('tareas/repartir/<int:familia_id>/', views.repartir_tareas, name='repartir_tareas'),
+    path('familia/limpiar-tareas/<int:familia_id>/', views.limpiar_instancias_tareas, name='limpiar_instancias_tareas'),
 ]

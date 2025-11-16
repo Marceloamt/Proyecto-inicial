@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Confirmar Reparto | HomeBalance{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 600px; margin: 50px auto; text-align: center; padding: 30px; border: 1px solid #ffc107; border-radius: 10px; background-color: #fff8e1;">
+    <h2 style="color: #856404;">🚨 Confirmación de Reparto Automático</h2>
+    
+    <p style="font-size: 1.1em; margin-bottom: 25px;">
+        Estás a punto de ejecutar el **Algoritmo de Reparto por Capacidad** para la familia <strong>{{ familia.nombre }}</strong>.
+    </p>
+    
+    <p>
+        Esta acción asignará automáticamente todas las tareas pendientes, respetando la **edad mínima** y la **disponibilidad horaria** de cada miembro.
+    </p>
+
+    <form method="POST" style="margin-top: 30px;">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger" style="padding: 12px 25px; font-size: 1.1em; background-color: #dc3545; border: none; color: white; border-radius: 5px; cursor: pointer;">
+            ✅ Sí, Ejecutar Reparto Ahora
+        </button>
+        <a href="{% url 'tareas' %}" class="btn btn-secondary" style="margin-left: 15px; padding: 12px 25px; text-decoration: none; border-radius: 5px;">
+            Cancelar y Volver
+        </a>
+    </form>
+</div>
+{% endblock %}

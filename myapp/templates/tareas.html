@@ -13,6 +13,19 @@
 
     {# mi comentario: Sección de Creación de Tareas, restringida solo si el usuario es jefe #}
     {% if es_jefe %}
+        
+        <div style="margin-bottom: 25px; text-align: center;">
+            {% comment %} 
+                El enlace usa familias_jefe.0.id para obtener el ID de la primera familia, 
+                ya que la vista 'repartir_tareas' requiere un único ID en la URL.
+            {% endcomment %}
+            <a href="{% url 'repartir_tareas' familia_id=familias_jefe.0.id %}" 
+               class="btn btn-warning btn-lg" 
+               style="padding: 10px 20px; font-size: 1.1em; font-weight: bold; background-color: #4CAF50; border-color: #4CAF50; color: #ffffff; border-radius: 5px; text-decoration: none; display: inline-block;">
+                 Iniciar Reparto Automático
+            </a>
+        </div>
+        
         <section class="form-card" style="border: 1px solid #ccc; padding: 20px; margin-bottom: 20px;">
             <h3>➕ Crear Nueva Tarea</h3>
             

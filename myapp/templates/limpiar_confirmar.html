@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Limpiar Calendario de Tareas</h2>
+<p>
+    Elige qué tareas pendientes deseas eliminar del calendario de la familia **{{ familia.nombre }}**.
+    Esto solo afecta a las asignaciones diarias generadas automáticamente.
+</p>
+<form method="POST">
+    {% csrf_token %}
+    
+    <h3>Filtros de Borrado (Opcional)</h3>
+    
+    <div class="form-group">
+        <label for="filtro_dia">Limpiar por Día de la Semana:</label>
+        <select id="filtro_dia" name="filtro_dia" class="form-control">
+            <option value="TODOS">TODOS los días (Limpieza Total)</option>
+            {% for code, name in dias_semana %}
+                <option value="{{ code }}">{{ name }}</option>
+            {% endfor %}
+        </select>
+        <small class="form-text text-muted">Esto limpiará, por ejemplo, todos los Lunes de todas las semanas futuras.</small>
+    </div>
+    
+    <div class="form-group mt-3">
+        <label for="filtro_fecha">Limpiar por Semana Específica:</label>
+        <input type="date" id="filtro_fecha" name="filtro_fecha" class="form-control">
+        <small class="form-text text-muted">Selecciona una fecha (ej: un Lunes) para borrar las tareas de la semana que comienza en esa fecha.</small>
+    </div>
+    
+    <hr>
+    <button type="submit" class="btn btn-danger">Confirmar y Limpiar Tareas</button>
+    <a href="{% url 'perfil' %}" class="btn btn-secondary">Cancelar</a>
+</form>
+{% endblock %}
